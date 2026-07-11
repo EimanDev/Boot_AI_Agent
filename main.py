@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 import argparse
+from prompts import system_prompt
 
 
 def main() -> None:
@@ -24,6 +25,7 @@ def main() -> None:
 
     # OpenAI SDK uses plain dicts for messages, not types.Content
     messages = [
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_input}
     ]
 
