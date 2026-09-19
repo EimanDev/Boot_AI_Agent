@@ -33,7 +33,7 @@ def main() -> None:
 
     # The method is chat.completions.create, and the key is "messages" not "contents"
     response = client.chat.completions.create(
-        model="openrouter/free",
+        model="qwen/qwen3.8-flash",
         messages=messages,
         tools=available_functions,
     )
