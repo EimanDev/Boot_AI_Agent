@@ -4,7 +4,10 @@ from openai import OpenAI
 import argparse
 from prompts import system_prompt
 from functions.call_function import available_functions
+from functions.call_function import call_function
 import json
+from collections.abc import Callable
+
 
 
 def main() -> None:
@@ -25,7 +28,7 @@ def main() -> None:
     user_input = args.user_prompt
     is_verbose = args.verbose
 
-    # OpenAI SDK uses plain dicts for messages, not types.Content
+    # OpenAI SDK uses plain dicts fo§r messages, not types.Content
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_input}
@@ -51,10 +54,14 @@ def main() -> None:
         print(message.content)
     else:
         for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            print(f"Calling function: {
-                  tool_call.function.name}({function_args})")
-
+        #    function_args = json.loads(tool_call.function.arguments or "{}")
+         #   print(f"Calling function: {
+          #        tool_call.function.name}({function_args})")
+            result_message = call_function(tool_call, is_verbose)
+            if not result_message.get("content"):
+                raise RuntimeError(f"Empty content from function: {tool_call.function.name}")
+            if is_verbose:
+                print(f"-> {result_message['content']}")
 
 if __name__ == "__main__":
     main()
