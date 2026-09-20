@@ -11,6 +11,8 @@ class Calculator:
             "*": lambda a, b: a * b,
             "/": lambda a, b: a / b,
         }
+        # Standard mathematical operator precedence: multiplication and
+        # division bind more tightly than addition and subtraction.
         self.precedence: dict[str, int] = {
             "+": 1,
             "-": 1,

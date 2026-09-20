@@ -33,35 +33,40 @@ def main() -> None:
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_input}
     ]
+    for _ in range(20):
+        # The method is chat.completions.create, and the key is "messages" not "contents"
+        response = client.chat.completions.create(
+            model="qwen/qwen3.8-flash",
+            messages=messages,
+            tools=available_functions,
+        )
 
-    # The method is chat.completions.create, and the key is "messages" not "contents"
-    response = client.chat.completions.create(
-        model="qwen/qwen3.8-flash",
-        messages=messages,
-        tools=available_functions,
-    )
+        if not response.usage:
+            raise RuntimeError("API response appears to be malformed")
 
-    if not response.usage:
-        raise RuntimeError("API response appears to be malformed")
-
-    if is_verbose:
-        print(f"User prompt: {user_input}")
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
-    message = response.choices[0].message
-    # Access the response text via choices, not .text
-    if not message.tool_calls:
-        print(message.content)
+        if is_verbose:
+            print(f"User prompt: {user_input}")
+            print(f"Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"Response tokens: {response.usage.completion_tokens}")
+        message = response.choices[0].message
+        messages.append(message)
+        # Access the response text via choices, not .text
+        if not message.tool_calls:
+            print(message.content)
+            break
+        else:
+            for tool_call in message.tool_calls:
+            #    function_args = json.loads(tool_call.function.arguments or "{}")
+            #   print(f"Calling function: {
+            #        tool_call.function.name}({function_args})")
+                result_message = call_function(tool_call, is_verbose)
+                if not result_message.get("content"):
+                    raise RuntimeError(f"Empty content from function: {tool_call.function.name}")
+                if is_verbose:
+                    print(f"-> {result_message['content']}")
+                messages.append(result_message)
     else:
-        for tool_call in message.tool_calls:
-        #    function_args = json.loads(tool_call.function.arguments or "{}")
-         #   print(f"Calling function: {
-          #        tool_call.function.name}({function_args})")
-            result_message = call_function(tool_call, is_verbose)
-            if not result_message.get("content"):
-                raise RuntimeError(f"Empty content from function: {tool_call.function.name}")
-            if is_verbose:
-                print(f"-> {result_message['content']}")
-
+        print("Agent exceeded the limit of 20 loops without producing and answer so the program has ended")
+        raise SystemExit(1)
 if __name__ == "__main__":
     main()
